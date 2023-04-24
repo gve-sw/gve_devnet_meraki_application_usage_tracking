@@ -1,0 +1,235 @@
+{% extends "masterpage.html" %}
+
+{% block content %}
+<div class="content content--alt">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Middle Rail -->
+            <div class="col-md-4">
+                <div class="section">
+                    <div class="panel panel--loose panel--raised base-margin-bottom">
+                        <h2 class="subtitle">Filter</h2>
+                        <hr>
+                        <form action="/display" method="POST">
+                            <!--Mac Field-->
+                                <div class="form-group base-margin-bottom">
+                                    <div class="form-group__text">
+                                        <input id="input-layout-stacked-1" type="text" name="mac_address" pattern="[A-Za-z0-9]{2}:[A-Za-z0-9]{2}:[A-Za-z0-9]{2}:[A-Za-z0-9]{2}:[A-Za-z0-9]{2}:[A-Za-z0-9]{2}" required>
+                                        <label for="input-layout-stacked-1">
+                                            <span>MAC Address</span>
+                                            <span title="this is a required field">*</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                            <!--Dropdown Select-->
+                            <div class="form-group base-margin-bottom">
+                                    <div class="form-group dropdown">
+                                        <div class="form-group__text select">
+                                            <input id="select-type-styled" name="time_period">
+                                            <label for="select-type-styled">Time Period</label>
+                                        </div>
+                                        <div class="dropdown__menu" id="dropdown-option">
+                                            <a>24 Hours</a>
+                                            <a>72 Hours</a>
+                                            <a>1 Week</a>
+                                        </div>
+                                    </div>
+                                    <div class="help-block" role="alert">
+                                        <span>Default: 24 Hours</span>
+                                    </div>
+                            </div>
+
+                            <!--Custom Field-->
+                            <div id="custom-interval" class="form-group base-margin-bottom">
+                                <div class="form-group__text">
+                                    <input type="number" min=0 max=743 name="custom-interval">
+                                    <label for="custom-interval">Custom Interval (Hours) - Optional</label>
+                                </div>
+                                <div class="help-block" role="alert">
+                                    <span>Must be <= 31 days, takes precedence over Time Period Field</span>
+                                </div>
+                            </div>
+
+                            <!-- Button area-->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <input id="settings-submit" class="btn btn-primary" type="submit" value="Filter">
+                                </div>
+                                <div class="col-md-4" id="loading-panel"></div>
+                                <div class="col-md-4">
+                                    <span class="required-label pull-right">* required fields</span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Rail -->
+            <div class="col-0 col-xl-3 col-md-3"></div>
+        </div>
+    </div>
+    <div class="container-fluid">
+        {% if table_flag == true %}
+
+            <!--Build Network Tabs-->
+            <ul id="bordered" class="tabs tabs--bordered" style="overflow-x: scroll">
+                <li id="bordered-0" class="tab active">
+                    <a tabindex="0">Summary</a>
+                </li>
+                {% for name in network_names %}
+                    <li id="bordered-{{loop.index}}" class="tab">
+                        <a tabindex="0">{{name}}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <div id="bordered-content" class="tab-content">
+                    <div id="bordered-0-content" class="tab-pane active">
+                        <div class="row">
+                            <!-- Middle Rail -->
+                            <div class="col-md-6">
+                                <div class="section">
+                                    <div class="panel panel--loose panel--raised">
+                                        <h2 class="subtitle">Client MAC: {{mac_address}}</h2>
+                                        <hr>
+                                        <div class="responsive-table">
+                                            <table class="table table--striped table--bordered" aria-label="Bordered table example">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Application</th>
+                                                        <th>Received (kilobytes)</th>
+                                                        <th>Sent (kilobytes)</th>
+                                                    </tr>
+                                                </thead>
+                                                {% set summary_name = summary_table[0] %}
+                                                {% set app_data = summary_table[1] %}
+                                                <tbody id="{{summary_name}}-table">
+                                                {% for key, value in app_data.items() %}
+                                                    <tr>
+                                                        <td>{{key}}</td>
+                                                        <td>{{value[0]}}</td>
+                                                        <td>{{value[1]}}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        {% set pagination = summary_table[2] %}
+
+                                        <!-- Pagination section -->
+                                        {% if pagination != '' %}
+                                            <ul class="pagination" id="{{summary_name}}-pagination">
+                                                {{pagination | safe}}
+                                            </ul>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Right Rail -->
+                            <div class="col-0 col-xl-3 col-md-3"></div>
+                        </div>
+                    </div>
+                {% for net_table in network_tables %}
+                    <div id="bordered-{{loop.index}}-content" class="tab-pane">
+                        <div class="row">
+                            <!-- Middle Rail -->
+                            <div class="col-md-6">
+                                <div class="section">
+                                    <div class="panel panel--loose panel--raised">
+                                        <h2 class="subtitle">Client MAC: {{mac_address}}</h2>
+                                        <hr>
+                                        <div class="responsive-table">
+                                            <table class="table table--striped table--bordered" aria-label="Bordered table example">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Application</th>
+                                                        <th>Received (kilobytes)</th>
+                                                        <th>Sent (kilobytes)</th>
+                                                    </tr>
+                                                </thead>
+                                                {% set network_name = net_table[0] %}
+                                                {% set app_data = net_table[1] %}
+                                                <tbody id="{{network_name}}-table">
+                                                {% for key, value in app_data.items() %}
+                                                    <tr>
+                                                        <td>{{key}}</td>
+                                                        <td>{{value[0]}}</td>
+                                                        <td>{{value[1]}}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        {% set pagination = net_table[2] %}
+
+                                        <!-- Pagination section -->
+                                        {% if pagination != '' %}
+                                            <ul class="pagination" id="{{network_name}}-pagination">
+                                                {{pagination | safe}}
+                                            </ul>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Right Rail -->
+                            <div class="col-0 col-xl-3 col-md-3"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="row base-margin-bottom">
+                <div class="col-md-6">
+                    <div class="section">
+                        <!-- Button area-->
+                        <a href="{{ url_for('download') }}" class="btn btn-primary">Download Data</a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+
+    // Define the function to update the table
+    function paginate(network, pageNumber) {
+      // Send an AJAX request to the server to get the new page data
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', `/get_page_data?network=${network}&page=${pageNumber}`);
+      xhr.onload = function() {
+        // Parse the response JSON and update the table with the new data
+        const responseData = JSON.parse(xhr.responseText);
+
+        const tableBody = document.getElementById(`${network}-table`);
+        tableBody.innerHTML = '';
+        for (const [key, value] of Object.entries(responseData[0])) {
+          const row = `<tr><td>${key}</td><td>${value[0]}</td><td>${value[1]}</td></tr>`;
+          tableBody.innerHTML += row;
+        }
+
+        const paginationBody = document.getElementById(`${network}-pagination`);
+        paginationBody.innerHTML = responseData[1];
+
+      };
+      xhr.send();
+    }
+
+    //Define on click event with submit button to trigger loading dots
+    $('#settings-submit').click(function() {
+        // Display the HTML code
+        var html = '<div class="loading-dots loading-dots--success" aria-label="Loading, please wait...">\
+                        <span></span>\
+                        <span></span>\
+                        <span></span>\
+                      </div>';
+        $('#loading-panel').html(html);
+    });
+
+</script>
+
+{% endblock %}
